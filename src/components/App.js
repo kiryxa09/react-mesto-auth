@@ -10,7 +10,7 @@ import React from "react";
 import EditProfilePopup from "./EditProfilePopup";
 import EditAvatarPopup from "./EditAvatarPopup";
 import AddPlacePopup from "./AddPlacePopup";
-import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Route, Routes, useLocation, useNavigate, Navigate } from "react-router-dom";
 import Login from "./Login";
 import Register from "./Register";
 import ProtectedRouteElement from "./ProtectedRoute";
@@ -36,48 +36,46 @@ function App() {
   const location = useLocation();
 
   React.useEffect(() => {
-    console.log(location.pathname);
     if (location.pathname === "/sign-up") {
       setRegistered(true);
     }
   });
 
   React.useEffect(() => {
-    api
-      .getProfileInfo()
-      .then((info) => {
+    if(loggedIn) {
+      Promise.all([                
+        api.getProfileInfo(), 
+        api.getInitialCards() 
+      ]) 
+      .then(([info, cards])=>{    
         setUser(info);
+        setCards(cards);    
+      }) 
+      .catch((err)=>{              
+      console.log(err);
       })
-      .catch((err) => {
-        console.log(err);
-      });
-  }, []);
+    } 
+  }, [loggedIn]);
 
-  React.useEffect(() => {
-    api
-      .getInitialCards()
-      .then((card) => {
-        setCards(card);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }, []);
+  
 
   React.useEffect(() => {
     handleTokenCheck();
   }, []);
 
   const handleTokenCheck = () => {
-    if (localStorage.getItem("jwt")) {
-      const jwt = localStorage.getItem("jwt");
+    const jwt = localStorage.getItem("jwt");
+    if (jwt) {
       auth.checkToken(jwt).then((res) => {
         if (res) {
           setLoggedIn(true);
           setEmail(res.data.email);
           navigate("/", { replace: true });
         }
-      });
+      })
+      .catch(err => {
+        console.log(err);
+      })
     }
   };
 
@@ -231,7 +229,7 @@ function App() {
           <Routes>
             <Route
               path="/"
-              element={
+              element={ 
                 <ProtectedRouteElement
                   element={Main}
                   cards={cards}
@@ -249,6 +247,7 @@ function App() {
               path="/sign-up"
               element={<Register onRegister={handleRegistration} />}
             />
+            <Route path="*" element={<Navigate to="sign-in" replace/>} />
           </Routes>
           <EditProfilePopup
             isOpen={isEditProfilePopupOpen}

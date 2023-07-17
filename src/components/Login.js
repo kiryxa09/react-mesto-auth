@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "../hooks/useForm";
 import * as auth from "../utills/auth";
 import { AppContext } from "../context/AppContext";
@@ -14,7 +14,6 @@ const Login = (props) => {
 
     appContext.setEmail(values.email);
 
-    console.log(values);
     if (!values.email || !values.password) {
       return;
     }
